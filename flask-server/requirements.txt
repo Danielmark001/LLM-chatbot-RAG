@@ -1,0 +1,32 @@
+# Core framework
+Flask==2.3.3
+flask-cors==4.0.0
+
+# Database
+pymongo==4.5.0
+
+# Azure services
+azure-storage-blob==12.18.3
+azure-search-documents==11.4.0
+azure-identity==1.14.1
+azure-core==1.29.4
+
+# LangChain and related
+langchain==0.1.0
+langchain-openai==0.0.5
+langchain-community==0.0.13
+
+# OpenAI
+openai==1.2.3
+
+# Document processing
+unstructured[all-docs]==0.10.30
+Pillow==10.0.1
+pdf2image==1.16.3
+pytesseract==0.3.10
+
+# Environment and utilities
+python-dotenv==1.0.0
+tqdm==4.66.1
+pandas==2.1.1
+numpy==1.25.2
