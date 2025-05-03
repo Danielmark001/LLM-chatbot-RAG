@@ -72,9 +72,9 @@ os.environ["OPENAI_API_KEY"] = "your_openai_api_key"
 
 ## Results and Performance
 
-Our exam preparation chatbot achieved impressive results across multiple evaluation metrics:
+The exam preparation chatbot achieved impressive results across multiple evaluation metrics:
 
-- **Query Comprehension**: 92% (our target metric)
+- **Query Comprehension**: 92% 
 - **Answer Accuracy**: 89%
 - **Response Completeness**: 91%
 - **Relevance to Exam Format**: 93%
