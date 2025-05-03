@@ -24,6 +24,15 @@ import uuid
 from pathlib import Path
 from azure.storage.blob import BlobServiceClient
 
+# Import RAG functionality
+from langchain_rag import (
+    create_basic_rag_chain,
+    create_few_shot_rag_chain,
+    create_conversational_rag_chain,
+    build_agent_graph,
+    chat_with_exam_bot
+)
+
 # Load environment variables
 load_dotenv()
 
@@ -41,6 +50,9 @@ embeddings = AzureOpenAIEmbeddings(
     azure_endpoint=os.environ.get('AZURE_ENDPOINT')
 )
 blob_service_client = BlobServiceClient.from_connection_string(os.environ.get('AZURE_CONN_STRING'))
+
+# Store chat sessions
+chat_sessions = {}
 
 # Vector store operations
 @app.route("/vectorstore", methods=['POST'])
@@ -396,6 +408,175 @@ def delete_index():
         # Delete the search index
         client.delete_index(collection_name)
         return jsonify({"message": "Index deleted successfully"}), 201
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# NEW RAG ENDPOINTS
+
+@app.route('/api/chat/basic/<collection_name>', methods=['POST'])
+def basic_rag_chat(collection_name):
+    """
+    Basic RAG chat endpoint - no conversation history.
+    """
+    data = request.json
+    question = data.get('question')
+    
+    if not question:
+        return jsonify({"error": "Question is required"}), 400
+    
+    try:
+        # Format collection name (lowercase with hyphens)
+        collection_name = collection_name.lower().replace(' ', '-')
+        
+        # Create basic RAG chain
+        rag_chain = create_basic_rag_chain(collection_name)
+        
+        # Generate answer
+        answer = rag_chain.invoke(question)
+        
+        return jsonify({
+            "answer": answer,
+            "collection": collection_name
+        }), 200
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/few-shot/<collection_name>', methods=['POST'])
+def few_shot_rag_chat(collection_name):
+    """
+    Few-shot RAG chat endpoint - no conversation history.
+    """
+    data = request.json
+    question = data.get('question')
+    
+    if not question:
+        return jsonify({"error": "Question is required"}), 400
+    
+    try:
+        # Format collection name (lowercase with hyphens)
+        collection_name = collection_name.lower().replace(' ', '-')
+        
+        # Create few-shot RAG chain
+        rag_chain = create_few_shot_rag_chain(collection_name)
+        
+        # Generate answer
+        answer = rag_chain.invoke(question)
+        
+        return jsonify({
+            "answer": answer,
+            "collection": collection_name
+        }), 200
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/conversational/<collection_name>', methods=['POST'])
+def conversational_rag_chat(collection_name):
+    """
+    Conversational RAG chat endpoint - maintains conversation history.
+    """
+    data = request.json
+    question = data.get('question')
+    session_id = data.get('session_id')
+    
+    if not question or not session_id:
+        return jsonify({"error": "Question and session_id are required"}), 400
+    
+    try:
+        # Format collection name (lowercase with hyphens)
+        collection_name = collection_name.lower().replace(' ', '-')
+        
+        # Get or create chat history for this session
+        if session_id not in chat_sessions:
+            chat_sessions[session_id] = {
+                "chat_history": [],
+                "collection": collection_name
+            }
+        
+        # Create conversational RAG chain
+        rag_chain = create_conversational_rag_chain(collection_name)
+        
+        # Generate answer
+        answer = rag_chain.invoke({
+            "question": question,
+            "chat_history": chat_sessions[session_id]["chat_history"]
+        })
+        
+        # Update chat history
+        chat_sessions[session_id]["chat_history"].append({"role": "human", "content": question})
+        chat_sessions[session_id]["chat_history"].append({"role": "ai", "content": answer})
+        
+        return jsonify({
+            "answer": answer,
+            "collection": collection_name,
+            "session_id": session_id
+        }), 200
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/reset/<session_id>', methods=['POST'])
+def reset_chat_session(session_id):
+    """
+    Reset a chat session.
+    """
+    if session_id in chat_sessions:
+        collection = chat_sessions[session_id]["collection"]
+        chat_sessions[session_id] = {
+            "chat_history": [],
+            "collection": collection
+        }
+        return jsonify({"message": f"Session {session_id} reset successfully"}), 200
+    else:
+        return jsonify({"error": "Session not found"}), 404
+
+@app.route('/api/chat/agent/<collection_name>', methods=['POST'])
+def agent_rag_chat(collection_name):
+    """
+    Agent-based RAG chat endpoint with advanced reasoning.
+    """
+    data = request.json
+    question = data.get('question')
+    session_id = data.get('session_id')
+    
+    if not question or not session_id:
+        return jsonify({"error": "Question and session_id are required"}), 400
+    
+    try:
+        # Format collection name (lowercase with hyphens)
+        collection_name = collection_name.lower().replace(' ', '-')
+        
+        # Get or create chat history for this session
+        if session_id not in chat_sessions:
+            chat_sessions[session_id] = {
+                "chat_history": [],
+                "collection": collection_name,
+                "agent_graph": build_agent_graph(collection_name)
+            }
+        elif "agent_graph" not in chat_sessions[session_id]:
+            chat_sessions[session_id]["agent_graph"] = build_agent_graph(collection_name)
+        
+        # Get chat history and agent graph
+        chat_history = chat_sessions[session_id]["chat_history"]
+        agent_graph = chat_sessions[session_id]["agent_graph"]
+        
+        # Generate answer
+        answer, updated_history = chat_with_exam_bot(agent_graph, question, chat_history)
+        
+        # Update chat history
+        chat_sessions[session_id]["chat_history"] = updated_history
+        
+        return jsonify({
+            "answer": answer,
+            "collection": collection_name,
+            "session_id": session_id
+        }), 200
+        
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
