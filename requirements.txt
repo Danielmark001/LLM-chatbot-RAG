@@ -1,0 +1,74 @@
+# Core Framework Dependencies
+flask==3.0.0
+flask-cors==4.0.0
+python-dotenv==1.0.0
+
+# LangChain and LangGraph
+langchain==0.1.0
+langchain-openai==0.0.5
+langchain-community==0.0.10
+langchain-core==0.1.0
+langgraph==0.0.20
+langchainhub==0.1.14
+
+# Vector Databases
+pinecone-client==3.0.0
+chromadb==0.4.22
+faiss-cpu==1.7.4
+
+# Embeddings and Retrieval
+sentence-transformers==2.2.2
+rank-bm25==0.2.2
+colbert-ai==0.2.19
+transformers==4.36.2
+torch==2.1.2
+
+# Azure Services
+azure-search-documents==11.4.0
+azure-storage-blob==12.19.0
+azure-core==1.29.5
+azure-identity==1.15.0
+
+# MongoDB
+pymongo==4.6.1
+
+# Document Processing
+pypdf==3.17.4
+python-multipart==0.0.6
+tiktoken==0.5.2
+
+# Machine Learning and NLP
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.2
+nltk==3.8.1
+spacy==3.7.2
+
+# API and HTTP
+openai==1.6.1
+requests==2.31.0
+httpx==0.26.0
+
+# Evaluation and Metrics
+datasets==2.16.1
+evaluate==0.4.1
+rouge-score==0.1.2
+bert-score==0.3.13
+
+# Utilities
+tqdm==4.66.1
+pydantic==2.5.2
+pyyaml==6.0.1
+pathlib==1.0.1
+uuid==1.30
+
+# Development
+jupyter==1.0.0
+matplotlib==3.7.2
+plotly==5.17.0
+seaborn==0.12.2
+
+# Fine-tuning
+peft==0.7.1
+accelerate==0.25.0
+bitsandbytes==0.41.3
